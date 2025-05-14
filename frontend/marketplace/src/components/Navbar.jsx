@@ -57,7 +57,7 @@ const Navbar = () => {
               <Link className="nav-link" to="/">{t('home')}</Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link" to="/products">{t('products')}</Link>
+              <Link className="nav-link" to="/ProductDashboard">{t('ProductDashboard')}</Link>
             </li>
             <li className="nav-item">
               <Link className="nav-link" to="/farmers">{t('farmers')}</Link>

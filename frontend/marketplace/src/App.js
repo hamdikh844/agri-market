@@ -6,13 +6,19 @@ import './i18n'; // Internationalization setup
 import './App.css';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
-import Products from './pages/Products';
+import ProductDashboard from './pages/ProductDashboard';
 import Farmers from './pages/Farmers';
 import Footer from './components/Footer';
 import { Suspense } from 'react';
 import LoadingSpinner from './components/LoadingSpinner';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import FruitProductPage from './pages/FruitProductPage';
+import MachineryProductPage from './pages/MachineryProductPage';
+import VegetableProductPage from './pages/VegetableProductPage';
+import GrainProductPage from './pages/GrainProductPage';
+import DairyProductPage from './pages/DairyProductPage';
+
 
 function App() {
   return (
@@ -27,10 +33,16 @@ function App() {
             <div className="container">
               <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/products" element={<Products />} />
+                <Route path="/ProductDashboard" element={<ProductDashboard />} />
                 <Route path="/farmers" element={<Farmers />} />
                 <Route path="/login" element={<Login/>}/>
                <Route path="/register" element={<Register/>}/>
+               <Route path="/products/create/fruit" element={<FruitProductPage />} />
+        <Route path="/products/create/machinery" element={<MachineryProductPage />} />
+        <Route path="/products/create/vegetables" element={<VegetableProductPage />} />
+        <Route path="/products/create/grains" element={<GrainProductPage />} />
+        <Route path="/products/create/dairy" element={<DairyProductPage />} />
+
                 
             
                 
