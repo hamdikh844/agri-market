@@ -7,38 +7,39 @@ export default function Home() {
       name: 'Vegetables', 
       icon: <FaCarrot className="fs-1" />, 
       color: 'text-success',
-      image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
+      image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=500&q=80'
     },
     { 
       name: 'Fruits', 
       icon: <FaAppleAlt className="fs-1" />, 
       color: 'text-danger',
-      image: 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
+      image: 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?auto=format&fit=crop&w=500&q=80'
     },
     { 
       name: 'Grains', 
       icon: <FaBreadSlice className="fs-1" />, 
       color: 'text-warning',
-      image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
+      image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=500&q=80'
     },
     { 
       name: 'Dairy', 
       icon: <FaCheese className="fs-1" />, 
       color: 'text-info',
-      image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
+      image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=500&q=80'
     },
     { 
       name: 'Machinery', 
       icon: <FaTractor className="fs-1" />, 
       color: 'text-primary',
-      image: 'https://images.unsplash.com/photo-1585011650347-c59dbef5a823?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80'
+      image: 'https://images.unsplash.com/photo-1585011650347-c59dbef5a823?auto=format&fit=crop&w=500&q=80'
     }
   ];
 
   return (
-    <div className="home-page">
+    <div>
+
       {/* Hero Section */}
-      <section className="hero-section bg-success bg-gradient text-white py-5">
+      <section className="bg-success bg-gradient text-white py-5">
         <div className="container py-5">
           <div className="row align-items-center">
             <div className="col-lg-6">
@@ -55,7 +56,7 @@ export default function Home() {
             </div>
             <div className="col-lg-6 d-none d-lg-block">
               <img 
-                src="https://images.unsplash.com/photo-1605000797499-95a51c5269ae?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" 
+                src="https://images.unsplash.com/photo-1605000797499-95a51c5269ae?auto=format&fit=crop&w=500&q=80" 
                 alt="Farm produce" 
                 className="img-fluid rounded shadow" 
               />
@@ -67,26 +68,24 @@ export default function Home() {
       {/* Categories Section */}
       <section className="py-5">
         <div className="container">
-          <h2 className="text-center mb-5 fw-bold">Shop by Category</h2>
-          <div className="row g-4">
+          <h2 className="text-center fw-bold mb-5">Shop by Category</h2>
+          <div className="row g-4 justify-content-center">
             {categories.map((category, index) => (
               <div key={index} className="col-6 col-md-4 col-lg-2">
                 <Link 
                   to={`/category/${category.name.toLowerCase()}`} 
-                  className="card category-card h-100 border-0 shadow-sm text-decoration-none text-dark text-center p-3 hover-effect"
+                  className="text-decoration-none text-center d-block p-3 border rounded shadow-sm bg-white h-100"
                 >
-                  <div className={`${category.color} mb-3`}>
+                  <div className={`${category.color} mb-2`}>
                     {category.icon}
                   </div>
-                  <h5 className="mb-0">{category.name}</h5>
-                  <div className="category-image-container mt-3">
-                    <img 
-                      src={category.image} 
-                      alt={category.name} 
-                      className="img-fluid rounded" 
-                      style={{ height: '100px', width: '100%', objectFit: 'cover' }}
-                    />
-                  </div>
+                  <h6 className="fw-semibold">{category.name}</h6>
+                  <img 
+                    src={category.image} 
+                    alt={category.name} 
+                    className="img-fluid rounded mt-2"
+                    style={{ height: '100px', objectFit: 'cover' }} 
+                  />
                 </Link>
               </div>
             ))}
@@ -106,7 +105,7 @@ export default function Home() {
           <div className="row g-4">
             {[1, 2, 3, 4].map((item) => (
               <div key={item} className="col-md-6 col-lg-3">
-                <div className="card product-card h-100 border-0 shadow-sm overflow-hidden">
+                <div className="card h-100 border-0 shadow-sm">
                   <div className="position-relative">
                     <img 
                       src={`https://source.unsplash.com/random/300x200?agriculture,${item}`} 
@@ -114,15 +113,15 @@ export default function Home() {
                       alt="Product" 
                       style={{ height: '200px', objectFit: 'cover' }} 
                     />
-                    <div className="badge bg-success position-absolute top-0 end-0 m-2">Fresh</div>
+                    <span className="badge bg-success position-absolute top-0 end-0 m-2">Fresh</span>
                   </div>
                   <div className="card-body">
                     <h5 className="card-title">Organic Product {item}</h5>
-                    <p className="text-muted small mb-2">From Local Farm {item}</p>
+                    <p className="card-text text-muted small">From Local Farm {item}</p>
                     <div className="d-flex justify-content-between align-items-center">
-                      <h6 className="mb-0 text-success">${(item * 2.5).toFixed(2)}</h6>
+                      <h6 className="text-success mb-0">${(item * 2.5).toFixed(2)}</h6>
                       <button className="btn btn-sm btn-outline-success">
-                        <i className="fas fa-cart-plus"></i> Add
+                        <i className="fas fa-cart-plus me-1"></i> Add
                       </button>
                     </div>
                   </div>
@@ -133,7 +132,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Rest of your existing sections... */}
     </div>
   );
 }

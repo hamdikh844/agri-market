@@ -13,11 +13,14 @@ import { Suspense } from 'react';
 import LoadingSpinner from './components/LoadingSpinner';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import FruitProductPage from './pages/FruitProductPage';
+//import FruitProductPage from './pages/FruitProductPage';
 import MachineryProductPage from './pages/MachineryProductPage';
 import VegetableProductPage from './pages/VegetableProductPage';
 import GrainProductPage from './pages/GrainProductPage';
 import DairyProductPage from './pages/DairyProductPage';
+import Profile from './pages/Profile';
+import UserDetail from './pages/UserDetail';
+import EditProfile from './pages/EditProfile';
 
 
 function App() {
@@ -37,11 +40,14 @@ function App() {
                 <Route path="/farmers" element={<Farmers />} />
                 <Route path="/login" element={<Login/>}/>
                <Route path="/register" element={<Register/>}/>
-               <Route path="/products/create/fruit" element={<FruitProductPage />} />
+            
         <Route path="/products/create/machinery" element={<MachineryProductPage />} />
         <Route path="/products/create/vegetables" element={<VegetableProductPage />} />
         <Route path="/products/create/grains" element={<GrainProductPage />} />
         <Route path="/products/create/dairy" element={<DairyProductPage />} />
+        <Route path="/profile" element={ <Profile/>}/>
+        <Route path="/user/:id" element={<UserDetail />} />
+        <Route path="EditProfile" element={<EditProfile/>}/>
 
                 
             

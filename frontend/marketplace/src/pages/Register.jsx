@@ -1,283 +1,260 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { 
-  FaUser, 
-  FaEnvelope, 
-  FaPhone, 
-  FaIdCard, 
-  FaLock, 
-  FaBirthdayCake 
-} from 'react-icons/fa';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Register = () => {
   const [formData, setFormData] = useState({
     Username: '',
     email: '',
     Password: '',
-    ConfirmPassword: '',
+    confirmPassword: '',
     Phone: '',
     Cin: '',
-    Birthday: ''
+    Birthday: null,
+    role: 'user'
   });
+
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  const API_BASE_URL = 'http://localhost:5001/api';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error when user types
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'Cin' ? value.toUpperCase() : value
+    }));
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  const validateForm = () => {
+  const handleDateChange = (date) => {
+    setFormData(prev => ({ ...prev, Birthday: date }));
+    if (errors.Birthday) {
+      setErrors(prev => ({ ...prev, Birthday: '' }));
+    }
+  };
+
+  const validate = () => {
     const newErrors = {};
-    
-    if (!formData.Username.trim()) {
-      newErrors.Username = 'Username is required';
-    } else if (formData.Username.length < 5) {
+
+    if (!formData.Username || formData.Username.trim().length < 5) {
       newErrors.Username = 'Username must be at least 5 characters';
     }
-    
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
+
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Valid email is required';
     }
-    
-    if (!formData.Phone) {
-      newErrors.Phone = 'Phone is required';
-    } else if (!/^\d{8}$/.test(formData.Phone)) {
-      newErrors.Phone = 'Phone must be 8 digits';
+
+    if (!formData.Password || formData.Password.length < 6 ||
+      !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(formData.Password)) {
+      newErrors.Password = 'Password must include uppercase, lowercase, number, and special character';
     }
-    
-    if (!formData.Cin) {
-      newErrors.Cin = 'CIN is required';
-    } else if (!/^[A-Z0-9]{8}$/.test(formData.Cin)) {
-      newErrors.Cin = 'CIN must be 8 alphanumeric characters';
+
+    if (formData.Password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
     }
-    
-    if (!formData.Birthday) {
-      newErrors.Birthday = 'Birthday is required';
+
+    if (!/^\d{8}$/.test(formData.Phone)) {
+      newErrors.Phone = 'Phone must be exactly 8 digits';
     }
-    
-    if (!formData.Password) {
-      newErrors.Password = 'Password is required';
-    } else if (formData.Password.length < 6) {
-      newErrors.Password = 'Password must be at least 6 characters';
+
+    if (!/^[A-Z0-9]{8}$/.test(formData.Cin)) {
+      newErrors.Cin = 'CIN must be 8 uppercase letters or digits';
     }
-    
-    if (formData.Password !== formData.ConfirmPassword) {
-      newErrors.ConfirmPassword = 'Passwords do not match';
+
+    if (!formData.Birthday || formData.Birthday >= new Date()) {
+      newErrors.Birthday = 'Valid birthday in the past is required';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
-    
-    setIsLoading(true);
-    
+
+    if (!validate()) return;
+
+    setIsSubmitting(true);
+
     try {
-      await axios.post('http://localhost:5001/api/auth/register', {
-        Username: formData.Username,
-        email: formData.email,
+      const userData = {
+        Username: formData.Username.trim(),
+        email: formData.email.trim(),
         Password: formData.Password,
         Phone: formData.Phone,
-        Cin: formData.Cin,
-        Birthday: formData.Birthday
+        Cin: formData.Cin.toUpperCase(),
+        Birthday: formData.Birthday.toISOString().split('T')[0],
+        role: formData.role
+      };
+
+       await axios.post(`${API_BASE_URL}/auth/register`, userData, {
+        headers: { 'Content-Type': 'application/json' }
       });
-      
+
       toast.success('Registration successful! Redirecting to login...');
       setTimeout(() => navigate('/login'), 2000);
-    } catch (error) {
-      let errorMessage = 'Registration failed. Please try again.';
-      
-      if (error.response) {
-        // Server responded with error status
-        if (error.response.data?.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.status === 400) {
-          errorMessage = 'Validation failed. Please check your inputs.';
-        } else if (error.response.status === 409) {
-          errorMessage = 'User already exists with these details.';
-        }
-        
-        // Set field-specific errors if available
-        if (error.response.data?.errors) {
-          setErrors(error.response.data.errors);
-        }
-      } else if (error.request) {
-        // Request was made but no response
-        errorMessage = 'Network error. Please check your connection.';
+
+    } catch (err) {
+      console.error('Registration error:', err.response?.data || err.message);
+      if (err.response?.data?.errors) {
+        setErrors(err.response.data.errors);
+      } else {
+        toast.error(err.response?.data?.message || 'Registration failed');
       }
-      
-      toast.error(errorMessage);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="container-fluid d-flex justify-content-center align-items-center vh-100 bg-light">
-      <div className="card shadow-lg p-4" style={{ maxWidth: '800px', width: '100%' }}>
-        <h2 className="text-center mb-4 text-primary">
-          <FaUser className="me-2" />
-          Create Your Account
-        </h2>
-        
-        <form onSubmit={handleSubmit}>
-          {/* Username and Email */}
-          <div className="row mb-3">
-            <div className="col-md-6 mb-3">
-              <label className="form-label">
-                <FaUser className="me-2" />
-                Username
-              </label>
-              <input
-                type="text"
-                className={`form-control ${errors.Username ? 'is-invalid' : ''}`}
-                name="Username"
-                value={formData.Username}
-                onChange={handleChange}
-                placeholder="Enter username (min 5 characters)"
-              />
-              {errors.Username && <div className="invalid-feedback">{errors.Username}</div>}
-            </div>
-            
-            <div className="col-md-6 mb-3">
-              <label className="form-label">
-                <FaEnvelope className="me-2" />
-                Email
-              </label>
-              <input
-                type="email"
-                className={`form-control ${errors.email ? 'is-invalid' : ''}`}
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter your email"
-              />
-              {errors.email && <div className="invalid-feedback">{errors.email}</div>}
+    <div className="container my-5">
+      <div className="row justify-content-center">
+        <div className="col-md-8 col-lg-6">
+          <div className="card shadow-sm border-0">
+            <div className="card-body p-4 p-md-5">
+              <h2 className="fw-bold text-center text-primary mb-4">Create Your Account</h2>
+
+              <form onSubmit={handleSubmit} noValidate>
+
+                {/* Username */}
+                <div className="mb-3">
+                  <label className="form-label">Username</label>
+                  <input
+                    type="text"
+                    name="Username"
+                    className={`form-control ${errors.Username ? 'is-invalid' : ''}`}
+                    value={formData.Username}
+                    onChange={handleChange}
+                  />
+                  <div className="invalid-feedback">{errors.Username}</div>
+                </div>
+
+                {/* Email */}
+                <div className="mb-3">
+                  <label className="form-label">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+                  <div className="invalid-feedback">{errors.email}</div>
+                </div>
+
+                {/* Password */}
+                <div className="mb-3">
+                  <label className="form-label">Password</label>
+                  <input
+                    type="password"
+                    name="Password"
+                    className={`form-control ${errors.Password ? 'is-invalid' : ''}`}
+                    value={formData.Password}
+                    onChange={handleChange}
+                  />
+                  <div className="invalid-feedback">{errors.Password}</div>
+                </div>
+
+                {/* Confirm Password */}
+                <div className="mb-3">
+                  <label className="form-label">Confirm Password</label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                  />
+                  <div className="invalid-feedback">{errors.confirmPassword}</div>
+                </div>
+
+                {/* Phone */}
+                <div className="mb-3">
+                  <label className="form-label">Phone</label>
+                  <input
+                    type="text"
+                    name="Phone"
+                    className={`form-control ${errors.Phone ? 'is-invalid' : ''}`}
+                    value={formData.Phone}
+                    onChange={handleChange}
+                    maxLength={8}
+                  />
+                  <div className="invalid-feedback">{errors.Phone}</div>
+                </div>
+
+                {/* CIN */}
+                <div className="mb-3">
+                  <label className="form-label">CIN</label>
+                  <input
+                    type="text"
+                    name="Cin"
+                    className={`form-control ${errors.Cin ? 'is-invalid' : ''}`}
+                    value={formData.Cin}
+                    onChange={handleChange}
+                    maxLength={8}
+                  />
+                  <div className="invalid-feedback">{errors.Cin}</div>
+                </div>
+
+                {/* Birthday */}
+                <div className="mb-3">
+                  <label className="form-label">Birthday</label>
+                  <DatePicker
+                    selected={formData.Birthday}
+                    onChange={handleDateChange}
+                    dateFormat="yyyy-MM-dd"
+                    placeholderText="Select your birthday"
+                    maxDate={new Date()}
+                    showYearDropdown
+                    scrollableYearDropdown
+                    className={`form-control ${errors.Birthday ? 'is-invalid' : ''}`}
+                  />
+                  {errors.Birthday && (
+                    <div className="invalid-feedback d-block">{errors.Birthday}</div>
+                  )}
+                </div>
+
+                {/* Role */}
+                <div className="mb-3">
+                  <label className="form-label">Role</label>
+                  <select
+                    name="role"
+                    value={formData.role}
+                    className="form-select"
+                    onChange={handleChange}
+                  >
+                    <option value="user">User</option>
+                    <option value="farmer">Farmer</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary w-100"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Creating...' : 'Register'}
+                </button>
+
+                <p className="text-center mt-3">
+                  Already have an account?{' '}
+                  <Link to="/login" className="text-primary">Log in</Link>
+                </p>
+              </form>
             </div>
           </div>
-
-          {/* Phone and Birthday */}
-          <div className="row mb-3">
-            <div className="col-md-6 mb-3">
-              <label className="form-label">
-                <FaPhone className="me-2" />
-                Phone
-              </label>
-              <input
-                type="tel"
-                className={`form-control ${errors.Phone ? 'is-invalid' : ''}`}
-                name="Phone"
-                value={formData.Phone}
-                onChange={handleChange}
-                placeholder="Enter 8-digit phone number"
-              />
-              {errors.Phone && <div className="invalid-feedback">{errors.Phone}</div>}
-            </div>
-            
-            <div className="col-md-6 mb-3">
-              <label className="form-label">
-                <FaBirthdayCake className="me-2" />
-                Birthday
-              </label>
-              <input
-                type="date"
-                className={`form-control ${errors.Birthday ? 'is-invalid' : ''}`}
-                name="Birthday"
-                value={formData.Birthday}
-                onChange={handleChange}
-              />
-              {errors.Birthday && <div className="invalid-feedback">{errors.Birthday}</div>}
-            </div>
-          </div>
-
-          {/* CIN */}
-          <div className="mb-3">
-            <label className="form-label">
-              <FaIdCard className="me-2" />
-              CIN
-            </label>
-            <input
-              type="text"
-              className={`form-control ${errors.Cin ? 'is-invalid' : ''}`}
-              name="Cin"
-              value={formData.Cin}
-              onChange={handleChange}
-              placeholder="Enter 8-character CIN"
-            />
-            {errors.Cin && <div className="invalid-feedback">{errors.Cin}</div>}
-          </div>
-
-          {/* Password and Confirm Password */}
-          <div className="row mb-4">
-            <div className="col-md-6 mb-3">
-              <label className="form-label">
-                <FaLock className="me-2" />
-                Password
-              </label>
-              <input
-                type="password"
-                className={`form-control ${errors.Password ? 'is-invalid' : ''}`}
-                name="Password"
-                value={formData.Password}
-                onChange={handleChange}
-                placeholder="Enter password (min 6 characters)"
-              />
-              {errors.Password && <div className="invalid-feedback">{errors.Password}</div>}
-            </div>
-            
-            <div className="col-md-6 mb-3">
-              <label className="form-label">
-                <FaLock className="me-2" />
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                className={`form-control ${errors.ConfirmPassword ? 'is-invalid' : ''}`}
-                name="ConfirmPassword"
-                value={formData.ConfirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm your password"
-              />
-              {errors.ConfirmPassword && <div className="invalid-feedback">{errors.ConfirmPassword}</div>}
-            </div>
-          </div>
-
-          <button 
-            type="submit" 
-            className="btn btn-primary w-100 py-2"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                Registering...
-              </>
-            ) : 'Register'}
-          </button>
-
-          <div className="text-center mt-3">
-            <p className="text-muted">
-              Already have an account?{' '}
-              <a href="/login" className="text-primary text-decoration-none">
-                Login here
-              </a>
-            </p>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );

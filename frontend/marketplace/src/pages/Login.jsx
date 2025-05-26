@@ -1,114 +1,129 @@
-// src/pages/Login.js
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaSignInAlt, FaEnvelope, FaLock } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
-    Password: ''
+    password: ''
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const { email, Password } = formData;
+  // ✅ Destructure safely
+  const email = formData?.email || '';
+  const password = formData?.password || '';
 
-  const onChange = (e) => {
-    setFormData((prevState) => ({
-      ...prevState,
-      [e.target.name]: e.target.value,
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
     }));
   };
 
-  const onSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!email || !email.includes('@')) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/auth/login', formData);
-      localStorage.setItem('user', JSON.stringify(response.data));
+      const res = await axios.post(`${API_BASE_URL}/auth/login`, { email, Password: password }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!res || !res.data) {
+        throw new Error('No data returned from server');
+      }
+
+      const { token, user } = res.data;
+
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
       toast.success('Login successful!');
-      navigate('/');
+      navigate('/profile');
+
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Login failed');
+      console.error('Login error:', error);
+      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
+      setFormData((prev) => ({ ...prev, password: '' }));
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="container">
-        <div className="row justify-content-center">
-          <div className="col-md-8 col-lg-6">
-            <div className="card auth-card shadow">
-              <div className="card-body p-5">
-                <div className="text-center mb-4">
-                  <h2 className="auth-title">
-                    <FaSignInAlt className="me-2" />
-                    Sign In
-                  </h2>
-                  <p className="text-muted">Access your AgriMarket account</p>
+    <div className="container py-5">
+      <div className="row justify-content-center">
+        <div className="col-md-8 col-lg-6">
+          <div className="card shadow">
+            <div className="card-body p-4">
+              <h2 className="text-center mb-4">Sign In</h2>
+
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label className="form-label">Email Address</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    name="email"
+                    value={email}
+                    onChange={handleChange}
+                    placeholder="Enter your email"
+                    required
+                  />
                 </div>
 
-                <form onSubmit={onSubmit}>
-                  <div className="mb-3">
-                    <label htmlFor="email" className="form-label">
-                      <FaEnvelope className="me-2" />
-                      Email Address
-                    </label>
+                <div className="mb-3">
+                  <label className="form-label">Password</label>
+                  <div className="input-group">
                     <input
-                      type="email"
+                      type={showPassword ? 'text' : 'password'}
                       className="form-control"
-                      id="email"
-                      name="email"
-                      value={email}
-                      onChange={onChange}
-                      placeholder="Enter your email"
-                      required
-                    />
-                  </div>
-
-                  <div className="mb-4">
-                    <label htmlFor="Password" className="form-label">
-                      <FaLock className="me-2" />
-                      Password
-                    </label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="Password"
-                      name="Password"
-                      value={Password}
-                      onChange={onChange}
+                      name="password"
+                      value={password}
+                      onChange={handleChange}
                       placeholder="Enter your password"
-                      minLength="6"
                       required
+                      minLength="6"
                     />
-                  </div>
-
-                  <div className="d-grid mb-3">
                     <button
-                      type="submit"
-                      className="btn btn-primary btn-lg"
-                      disabled={loading}
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => setShowPassword(!showPassword)}
                     >
-                      {loading ? 'Signing In...' : 'Sign In'}
+                      {showPassword ? 'Hide' : 'Show'}
                     </button>
                   </div>
+                </div>
 
-                  <div className="text-center">
-                    <p className="mb-0">
-                      Don't have an account?{' '}
-                      <Link to="/Register" className="text-decoration-none">
-                        Register here
-                      </Link>
-                    </p>
-                  </div>
-                </form>
-              </div>
+                <button type="submit" className="btn btn-primary w-100 py-2" disabled={loading}>
+                  {loading ? 'Signing in...' : 'Sign In'}
+                </button>
+
+                <div className="text-center mt-3">
+                  <a href="/register" className="d-block mb-2">Create account</a>
+                  <a href="/forgot-password">Forgot password?</a>
+                </div>
+              </form>
             </div>
           </div>
         </div>
